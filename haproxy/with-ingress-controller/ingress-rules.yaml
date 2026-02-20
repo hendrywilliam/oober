@@ -1,0 +1,21 @@
+# Ingress resource.
+# Ingress controller always read any state from this resource.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: echo-ingress
+  # Different namespace will lead to unexpected behaviour.
+  namespace: haproxy-controller
+spec:
+  ingressClassName: haproxy
+  rules:
+    - host: # Create fallback to handle all HTTP(s) requests.
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: echo-server-service
+                port:
+                  number: 8080

@@ -1,0 +1,6 @@
+# Namespace ISOLATING groups of resource within a single cluster.
+# Do not use "default" namespace or any initial namespaces.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: haproxy-controller
