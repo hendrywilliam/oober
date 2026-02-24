@@ -1,0 +1,127 @@
+# Sidecar Deployment Example
+# Main application Nginx with Ubuntu as sidecar for monitoring/logging
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: sidecar
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sidecar-app
+  namespace: sidecar
+  labels:
+    app: sidecar-app
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: sidecar-app
+  template:
+    metadata:
+      labels:
+        app: sidecar-app
+    spec:
+      containers:
+        # Main application container
+        - name: main-app
+          image: nginx:alpine
+          ports:
+            - containerPort: 80
+          resources:
+            # Requests are used by kube-scheduler to select a suitable Node.
+            # Request is more flexible than Limits
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            # Limit defines the maximum resources the container CAN use.
+            limits:
+              memory: "256Mi"
+              cpu: "200m"
+          volumeMounts:
+            - name: shared-logs
+              mountPath: /var/log/nginx
+            - name: nginx-config
+              mountPath: /etc/nginx/nginx.conf
+              subPath: nginx.conf
+              readOnly: true
+          restartPolicy: always
+
+        # Ubuntu sidecar container for monitoring/logging.
+        - name: ubuntu-sidecar
+          image: ubuntu:22.04
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "50m"
+            limits:
+              memory: "128Mi"
+              cpu: "100m"
+          volumeMounts:
+            - name: shared-logs
+              mountPath: /var/log/nginx
+          command: ["/bin/bash"]
+          args:
+            - "-c"
+            - |
+              apt-get update && apt-get install -y curl
+              echo "Sidecar container started."
+              tail -f /var/log/nginx/access.log
+          restartPolicy: always
+
+      # Bind volume
+      volumes:
+        - name: shared-logs
+          emptyDir: {}
+        - name: nginx-config
+          configMap:
+            name: nginx-config
+
+---
+# Service to access the application
+apiVersion: v1
+kind: Service
+metadata:
+  name: sidecar-service
+  namespace: sidecar
+spec:
+  selector:
+    app: sidecar-app
+  ports:
+    - port: 80
+      targetPort: 80
+  type: ClusterIP
+
+---
+# Nginx configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-config
+  namespace: sidecar
+data:
+  nginx.conf: |
+    events {
+      worker_connections 1024;
+    }
+
+    http {
+      server {
+        listen 80;
+        server_name localhost;
+
+        location / {
+          root /usr/share/nginx/html;
+          index index.html index.htm;
+        }
+
+        location /health {
+          access_log off;
+          return 200 "healthy\n";
+        }
+
+        access_log /var/log/nginx/access.log;
+        error_log /var/log/nginx/error.log;
+      }
+    }
