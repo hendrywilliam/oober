@@ -7,7 +7,8 @@ metadata:
   # Different namespace will lead to unexpected behaviour.
   namespace: haproxy-controller
 spec:
-  ingressClassName: haproxy
+  # Refer to ingress-controller-class.yaml
+  ingressClassName: prod
   rules:
     - host: # Create fallback to handle all HTTP(s) requests.
       http:

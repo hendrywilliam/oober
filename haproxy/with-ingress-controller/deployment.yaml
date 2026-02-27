@@ -24,6 +24,8 @@ spec:
           image: haproxytech/kubernetes-ingress
           args:
             - --configmap=haproxy-controller/haproxy-kubernetes-ingress
+            # Add this to use ingress controller.
+            - --ingress.class=prod-controller
           securityContext:
             runAsNonRoot: true
             allowPrivilegeEscalation: false

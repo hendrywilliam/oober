@@ -1,0 +1,7 @@
+# Map the class name to targeted ingress controller.
+apiVersion: networking.k8s.io/v1
+kind: IngressClass
+metadata:
+  name: prod
+spec:
+  controller: haproxy.org/ingress-controller/prod-controller
