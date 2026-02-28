@@ -6,11 +6,25 @@ metadata:
   name: echo-ingress
   # Different namespace will lead to unexpected behaviour.
   namespace: haproxy-controller
+  # Add this metadata to enable
+  cert-manager.io/issuer: "letsencrypt-staging" # Or production.
 spec:
   # Refer to ingress-controller-class.yaml
   ingressClassName: prod
   rules:
-    - host: # Create fallback to handle all HTTP(s) requests.
+    - host: example.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: serviceName
+                port:
+                  number: 6969
+    # Create fallback to handle all HTTP(s) requests.
+    # NOTE: This pattern isnt usable with TLS certificate
+    - host:
       http:
         paths:
           - path: /
