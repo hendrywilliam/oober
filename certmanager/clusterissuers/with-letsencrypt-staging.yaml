@@ -1,0 +1,25 @@
+# ClusterIssuer is non-namespace resource.
+# Can use cluster scoped certificates regardless their namespace.
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-staging
+spec:
+  acme:
+    email: hendriwilliam29@gmail.com
+    # Optional.
+    profile: tlsserver
+    server: https://acme-staging-v02.api.letsencrypt.org/directory
+    privateKeySecretRef:
+      name: letsencrypt-staging
+    # Add a single challenge solver, HTTP01 using HAProxy.
+    solvers:
+      - http01:
+          ingress:
+            ingressClassName: prod
+      # Comment dns01 to use http01.
+      - dns01:
+          cloudflare:
+            apiTokenSecretRef:
+              name: cloudflare-api-token-secret
+              key: api-token

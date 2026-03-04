@@ -14,12 +14,15 @@ spec:
     - name: http
       port: 80
       protocol: TCP
+      # Refer to deployment.yaml: deployments.pod.template.spec.containers[0].ports
       targetPort: 8080
     - name: https
       port: 443
       protocol: TCP
+      # Refer to deployment.yaml: deployments.pod.template.spec.containers[0].ports
       targetPort: 8443
     - name: stat
       port: 1024
       protocol: TCP
+      # Refer to deployment.yaml: deployments.pod.template.spec.containers[0].ports
       targetPort: 1024

@@ -1,13 +1,21 @@
 #!/bin/bash
 
-alias kg='kubectl get'
-alias kd='kubectl describe'
-alias krm='kubectl delete'
-alias ke='kubectl explain'
-alias ka='kubectl apply'
-alias kgetctx='kubectl config view --minify | grep namespace:'
-alias ksetctx='kubectl config set-context --current --namespace'
-alias kexec='kubectl exec'
-alias klog='kubectl logs'
-alias kapires='kubectl api-resources | more'
-alias kgetcfg='kubectl config view'
+if sudo -n true 2>/dev/null; then
+  KCMD="sudo kubectl"
+else
+  KCMD="kubectl"
+fi
+
+alias kg="$KCMD get"
+alias kd="$KCMD describe"
+alias krm="$KCMD delete"
+alias ke="$KCMD explain"
+alias ka="$KCMD apply"
+alias kgetctx="$KCMD config view --minify | grep namespace:"
+alias ksetctx="$KCMD config set-context --current --namespace"
+alias kexec="$KCMD exec"
+alias klog="$KCMD logs"
+alias kapires="$KCMD api-resources | more"
+alias kgetcfg="$KCMD config view"
+alias kan="$KCMD annotate"
+alias kroll="$KCMD rollout"

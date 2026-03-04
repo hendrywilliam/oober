@@ -6,11 +6,19 @@ metadata:
   name: echo-ingress
   # Different namespace will lead to unexpected behaviour.
   namespace: haproxy-controller
-  # Add this metadata to enable
+  # There are 2 ways to requests TLS certificate, using
+  # annotation on the ingress with ingress-shim or
+  # directly creating a certificate resource.
   cert-manager.io/issuer: "letsencrypt-staging" # Or production.
+  # cert-manager.io/cluster-issuer: "letsencrypt-staging" # For cluster issuer
 spec:
   # Refer to ingress-controller-class.yaml
   ingressClassName: prod
+  # Deploy TLS Ingress.
+  tls:
+    - hosts:
+        - domain.com
+      secretName: letsencrypt-staging
   rules:
     - host: example.com
       http:

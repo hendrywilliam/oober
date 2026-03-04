@@ -1,0 +1,13 @@
+# Created from User Profile -> API Tokens -> API Tokens
+# Permission:
+# 1. Zone - DNS - Edit
+# 2. Zone - Zone - Read
+# Zone Resources:
+# Include - All Zones.
+apiVersion: v1
+kind: Secret
+metadata:
+  name: cloudflare-api-token-secret
+type: Opaque
+stringData:
+  api-token: <API-Token>
