@@ -20,6 +20,7 @@ spec:
       # Comment dns01 to use http01.
       - dns01:
           cloudflare:
+            # Do not use apiKeySecretRef
             apiTokenSecretRef:
-              name: cloudflare-api-token-secret
+              name: cloudflare-token
               key: api-token

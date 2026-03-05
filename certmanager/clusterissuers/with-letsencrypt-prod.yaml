@@ -1,20 +1,21 @@
 apiVersion: cert-manager.io/v1
 kind: ClusterIssuer
 metadata:
-  name: letsencrypt-staging
+  name: letsencrypt-prdo
 spec:
   acme:
     email: hendriwilliam29@gmail.com
     profile: tlsserver
-    server: https://acme-staging-v02.api.letsencrypt.org/directory
+    server: https://acme-v02.api.letsencrypt.org/directory
     privateKeySecretRef:
-      name: letsencrypt-staging
+      name: letsencrypt-prod
     solvers:
-      - http01:
-          ingress:
-            ingressClassName: prod
-      - dns01:
+      - selector:
+          dnsZones:
+            - hendrywilliam.com
+            - "*.hendrywilliam.com"
+        dns01:
           cloudflare:
             apiTokenSecretRef:
-              name: cloudflare-api-token-secret
+              name: cloudflare-token
               key: api-token
