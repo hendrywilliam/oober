@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: registry
+  namespace: ns-registry
+  labels:
+    app: registry
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: registry
+  template:
+    metadata:
+      labels:
+        app: registry
+    spec:
+      containers:
+        - name: registry
+          image: registry:2.8.2
+          ports:
+            - containerPort: 5000
+              protocol: TCP
+          env:
+            - name: REGISTRY_STORAGE_DELETE_ENABLED
+              value: "true"
+          volumeMounts:
+            - name: registry-data
+              mountPath: /var/lib/registry
+            - name: registry-config
+              mountPath: /etc/docker/registry/config.yml
+              subPath: config.yml
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "256Mi"
+            limits:
+              cpu: "500m"
+              memory: "1Gi"
+      volumes:
+        - name: registry-data
+          persistentVolumeClaim:
+            claimName: registry-data
+        - name: registry-config
+          configMap:
+            name: registry-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: registry-svc
+  namespace: ns-registry
+  labels:
+    app: registry
+spec:
+  type: ClusterIP
+  selector:
+    app: registry
+  ports:
+    - name: registry-port
+      protocol: TCP
+      port: 5000
+      targetPort: 5000
