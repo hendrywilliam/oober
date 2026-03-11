@@ -1,0 +1,14 @@
+# Create a new ClusterRole.
+# Serangkaian rules terhadap user atau group untuk hak akses resource tertentu.
+# Harus dibinding dengan object lain "ClusterRoleBinding".
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: spiderman
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - "*"
+    verbs:
+      - "*"

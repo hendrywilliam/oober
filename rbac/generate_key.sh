@@ -54,7 +54,7 @@ fi
 # Generate private key with OpenSSL
 # You can customize the key type and size as needed
 # Example: RSA 2048 bits
-openssl genrsa -out "${KEY_OUTPUT}" 2048
+openssl genrsa -out "${KEY_OUTPUT}" 4096
 
 # Optional: Generate private key with different parameters
 # For example, to generate a 4096-bit RSA key:
