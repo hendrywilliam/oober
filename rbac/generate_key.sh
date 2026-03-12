@@ -1,8 +1,9 @@
 #!/bin/bash
 
-# Script to generate a private key using OpenSSL
-# Creates an output folder in the RBAC directory and saves the private key there
-# Accepts private key filename from command line argument or interactive keyboard input
+# Script to generate private keys and certificate requests using OpenSSL
+# Usage:
+#   ./generate_key.sh gen [filename]               - Generate private key
+#   ./generate_key.sh req <private_key> "<subject>" - Generate CSR with subject
 
 # Define paths
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -11,56 +12,145 @@ OUTPUT_DIR="${SCRIPT_DIR}/output"
 # Create output directory if it doesn't exist
 mkdir -p "${OUTPUT_DIR}"
 
-# Get private key filename
-# Priority: 1. Command line argument, 2. Interactive keyboard input
-if [ -n "$1" ]; then
-    # Get filename from command line argument
-    KEY_FILENAME="$1"
-else
-    # Loop to get filename from keyboard input
-    while true; do
-        echo "Enter private key filename (press Enter for default 'private_key.pem'):"
-        read KEY_FILENAME
-
-        # If empty input, use default
-        if [ -z "$KEY_FILENAME" ]; then
-            KEY_FILENAME="private_key.pem"
-            break
-        fi
-
-        # Check if input is not empty
-        if [ -n "$KEY_FILENAME" ]; then
-            break
-        fi
-    done
+# Check if mode argument is provided
+if [ -z "$1" ]; then
+    echo "Error: No mode specified."
+    echo "Usage:"
+    echo "  ./generate_key.sh gen [filename] [bits=4096]              - Generate private key"
+    echo "  ./generate_key.sh req <private_key> \"<subject>\" - Generate CSR with subject"
+    echo ""
+    echo "Subject format:"
+    echo "  \"/CN=batman/O=testgroup/O=groupA\""
+    exit 1
 fi
 
-# Remove .pem extension if present to avoid double extension
-KEY_FILENAME=$(basename "$KEY_FILENAME" .pem).pem
+MODE="$1"
 
-# Define full output path
-KEY_OUTPUT="${OUTPUT_DIR}/${KEY_FILENAME}"
+case "$MODE" in
+    gen)
+        # Generate private key mode
+        if [ -n "$2" ]; then
+            KEY_FILENAME="$2"
+        else
+            # Loop to get filename from keyboard input
+            while true; do
+                echo "Enter private key filename (press Enter for default 'private_key.pem'):"
+                read KEY_FILENAME
 
-# Check if file already exists
-if [ -f "$KEY_OUTPUT" ]; then
-    echo "Warning: File '$KEY_FILENAME' already exists in output directory."
-    read -p "Do you want to overwrite it? (y/N): " confirm
-    if [[ ! "$confirm" =~ ^[Yy]$ ]]; then
-        echo "Operation cancelled."
-        exit 0
-    fi
-fi
+                # If empty input, use default
+                if [ -z "$KEY_FILENAME" ]; then
+                    KEY_FILENAME="private_key.pem"
+                    break
+                fi
 
-# Generate private key with OpenSSL
-# You can customize the key type and size as needed
-# Example: RSA 2048 bits
-openssl genrsa -out "${KEY_OUTPUT}" 4096
+                # Check if input is not empty
+                if [ -n "$KEY_FILENAME" ]; then
+                    break
+                fi
+            done
+        fi
 
-# Optional: Generate private key with different parameters
-# For example, to generate a 4096-bit RSA key:
-# openssl genrsa -out "${KEY_OUTPUT}" 4096
+        # Remove .pem extension if present to avoid double extension
+        KEY_FILENAME=$(basename "$KEY_FILENAME" .pem).pem
 
-# Or to generate an EC key (secp256r1 curve):
-# openssl ecparam -name secp256r1 -genkey -noout -out "${KEY_OUTPUT}"
+        # Define full output path
+        KEY_OUTPUT="${OUTPUT_DIR}/${KEY_FILENAME}"
 
-echo "Private key generated successfully at: ${KEY_OUTPUT}"
+        # Check if file already exists
+        if [ -f "$KEY_OUTPUT" ]; then
+            echo "Warning: File '$KEY_FILENAME' already exists in output directory."
+            read -p "Do you want to overwrite it? (y/N): " confirm
+            if [[ ! "$confirm" =~ ^[Yy]$ ]]; then
+                echo "Operation cancelled."
+                exit 0
+            fi
+        fi
+
+        if [ -n "$3" ]; then
+          BITS="$3"
+        else
+          BITS="4096"
+        fi
+
+        # Generate private key with OpenSSL (RSA 4096 bits)
+        openssl genrsa -out "${KEY_OUTPUT}" "${BITS}"
+
+        echo "Private key generated successfully at: ${KEY_OUTPUT} with ${BITS} bits."
+        ;;
+
+    req)
+        # Generate certificate request mode
+        if [ -z "$2" ]; then
+            echo "Error: Private key is required for req mode."
+            echo "Usage: ./generate_key.sh req <private_key> \"<subject>\""
+            exit 1
+        fi
+
+        KEY_FILENAME="$2"
+
+        if [ -z "$3" ]; then
+            echo "Error: Subject is required for req mode."
+            echo "Usage: ./generate_key.sh req <private_key> \"<subject>\""
+            echo ""
+            echo "Subject format:"
+            echo "  \"/CN=batman/O=testgroup/O=groupA\""
+            exit 1
+        fi
+
+        SUBJECT="$3"
+
+        # Remove .pem extension if present
+        KEY_FILENAME=$(basename "$KEY_FILENAME" .pem).pem
+        KEY_PATH="${OUTPUT_DIR}/${KEY_FILENAME}"
+
+        # Check if private key exists
+        if [ ! -f "$KEY_PATH" ]; then
+            echo "Error: Private key '$KEY_FILENAME' not found in output directory."
+            exit 1
+        fi
+
+        # Extract CN from subject string
+        CN=$(echo "$SUBJECT" | grep -oP '(?<=CN=)[^/]+')
+        if [ -z "$CN" ]; then
+            # Fallback to private key name if CN not found
+            CN=$(basename "$KEY_FILENAME" .pem)
+        fi
+
+        # Generate CSR filename based on CN
+        CSR_FILENAME="${CN}.csr"
+        CSR_OUTPUT="${OUTPUT_DIR}/${CSR_FILENAME}"
+
+        # Check if CSR file already exists
+        if [ -f "$CSR_OUTPUT" ]; then
+            echo "Warning: CSR file '$CSR_FILENAME' already exists in output directory."
+            read -p "Do you want to overwrite it? (y/N): " confirm
+            if [[ ! "$confirm" =~ ^[Yy]$ ]]; then
+                echo "Operation cancelled."
+                exit 0
+            fi
+        fi
+
+        # Generate CSR
+        openssl req -new -key "${KEY_PATH}" -out "${CSR_OUTPUT}" -subj "${SUBJECT}" -sha256
+
+        echo "Certificate request generated successfully at: ${CSR_OUTPUT}"
+        echo ""
+        echo "Subject: ${SUBJECT}"
+        echo ""
+        echo "You can view the CSR details with:"
+        echo "  openssl req -in ${CSR_OUTPUT} -text -noout"
+        ;;
+
+    *)
+        echo "Error: Invalid mode '$MODE'."
+        echo "Valid modes are: gen, req"
+        echo ""
+        echo "Usage:"
+        echo "  ./generate_key.sh gen [filename]               - Generate private key"
+        echo "  ./generate_key.sh req <private_key> \"<subject>\" - Generate CSR with subject"
+        echo ""
+        echo "Subject format:"
+        echo "  \"/CN=batman/O=testgroup/O=groupA\""
+        exit 1
+        ;;
+esac
