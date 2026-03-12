@@ -1,0 +1,11 @@
+apiVersion: certificates.k8s.io/v1
+kind: CertificateSigningRequest
+metadata:
+  name: peterparker
+spec:
+  # Do this to .csr file, and remove newline char then input to request field.
+  # base64 ./output/<csrFileName>.csr | tr -d '\n'
+  request: <base64 csr data>
+  signerName: kubernetes.io/kube-apiserver-client
+  usages:
+    - client auth

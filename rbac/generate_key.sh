@@ -2,8 +2,9 @@
 
 # Script to generate private keys and certificate requests using OpenSSL
 # Usage:
-#   ./generate_key.sh gen [filename]               - Generate private key
+#   ./generate_key.sh gen [filename] [bits=4096]              - Generate private key
 #   ./generate_key.sh req <private_key> "<subject>" - Generate CSR with subject
+#   ./generate_key.sh print <filename>                        - Print file info (CSR or private key)
 
 # Define paths
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -18,6 +19,7 @@ if [ -z "$1" ]; then
     echo "Usage:"
     echo "  ./generate_key.sh gen [filename] [bits=4096]              - Generate private key"
     echo "  ./generate_key.sh req <private_key> \"<subject>\" - Generate CSR with subject"
+    echo "  ./generate_key.sh print <filename>                        - Print file info (CSR or private key)"
     echo ""
     echo "Subject format:"
     echo "  \"/CN=batman/O=testgroup/O=groupA\""
@@ -141,16 +143,105 @@ case "$MODE" in
         echo "  openssl req -in ${CSR_OUTPUT} -text -noout"
         ;;
 
-    *)
-        echo "Error: Invalid mode '$MODE'."
-        echo "Valid modes are: gen, req"
-        echo ""
-        echo "Usage:"
-        echo "  ./generate_key.sh gen [filename]               - Generate private key"
-        echo "  ./generate_key.sh req <private_key> \"<subject>\" - Generate CSR with subject"
-        echo ""
-        echo "Subject format:"
-        echo "  \"/CN=batman/O=testgroup/O=groupA\""
-        exit 1
-        ;;
+        print)
+            # Print file info mode
+            if [ -z "$2" ]; then
+                echo "Error: Filename is required for print mode."
+                echo "Usage: ./generate_key.sh print <filename>"
+                exit 1
+            fi
+
+            FILENAME="$2"
+
+            # Check if filename has path, otherwise use output directory
+            if [[ "$FILENAME" == */* ]]; then
+                FILE_PATH="$FILENAME"
+            else
+                FILE_PATH="${OUTPUT_DIR}/${FILENAME}"
+            fi
+
+            # Check if file exists
+            if [ ! -f "$FILE_PATH" ]; then
+                echo "Error: File '$FILENAME' not found."
+                exit 1
+            fi
+
+            # Get file extension
+            EXT="${FILENAME##*.}"
+            BASENAME=$(basename "$FILENAME" "$EXT")
+
+            echo ""
+            echo "=================================="
+            echo "File: $FILENAME"
+            echo "Path: $FILE_PATH"
+            echo "=================================="
+            echo ""
+
+            # Determine command based on extension
+            case "$EXT" in
+                csr)
+                    echo "Type: Certificate Signing Request (CSR)"
+                    echo ""
+                    echo "--- Subject ---"
+                    openssl req -in "$FILE_PATH" -subject -noout
+                    echo ""
+                    echo "--- Full Details ---"
+                    openssl req -in "$FILE_PATH" -text -noout
+                    ;;
+                pem|key)
+                    echo "Type: Private Key"
+                    echo ""
+                    echo "--- Key Details ---"
+                    openssl rsa -in "$FILE_PATH" -text -noout
+                    ;;
+                crt|cer|p12|pfx)
+                    echo "Type: Certificate"
+                    echo ""
+                    echo "--- Subject ---"
+                    openssl x509 -in "$FILE_PATH" -subject -noout
+                    echo ""
+                    echo "--- Full Details ---"
+                    openssl x509 -in "$FILE_PATH" -text -noout
+                    ;;
+                *)
+                    echo "Warning: Unknown file extension '.$EXT'"
+                    echo ""
+                    echo "Trying to detect file type..."
+
+                    # Try CSR
+                    if openssl req -in "$FILE_PATH" -noout -text >/dev/null 2>&1; then
+                        echo "Detected: Certificate Signing Request (CSR)"
+                        echo ""
+                        openssl req -in "$FILE_PATH" -text -noout
+                    # Try private key
+                    elif openssl rsa -in "$FILE_PATH" -noout -text >/dev/null 2>&1; then
+                        echo "Detected: Private Key"
+                        echo ""
+                        openssl rsa -in "$FILE_PATH" -text -noout
+                    # Try certificate
+                    elif openssl x509 -in "$FILE_PATH" -noout -text >/dev/null 2>&1; then
+                        echo "Detected: Certificate"
+                        echo ""
+                        openssl x509 -in "$FILE_PATH" -text -noout
+                    else
+                        echo "Error: Unable to detect file type or read the file."
+                        exit 1
+                    fi
+                    ;;
+            esac
+            ;;
+
+        *)
+            echo "Error: Invalid mode '$MODE'."
+            echo "Valid modes are: gen, req, print"
+            echo ""
+            echo "Usage:"
+            echo "  ./generate_key.sh gen [filename]               - Generate private key"
+            echo "  ./generate_key.sh req <private_key> \"<subject>\" - Generate CSR with subject"
+            echo "  ./generate_key.sh print <filename>             - Print file info (CSR or private key)"
+            echo ""
+            echo "Subject format:"
+            echo "  \"/CN=batman/O=testgroup/O=groupA\""
+            exit 1
+            ;;
 esac
