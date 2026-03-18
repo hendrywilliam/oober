@@ -1,0 +1,10 @@
+# Can use role/clusterrole.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: read-all-pods
+  namespace: svc-test-ns
+rules:
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get", "watch", "list"]

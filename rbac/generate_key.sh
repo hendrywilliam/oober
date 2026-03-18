@@ -3,7 +3,7 @@
 # Script to generate private keys and certificate requests using OpenSSL
 # Usage:
 #   ./generate_key.sh gen [filename] [bits=4096]              - Generate private key
-#   ./generate_key.sh req <private_key> "<subject>" - Generate CSR with subject
+#   ./generate_key.sh req <private_key> "<subject>" - Generate CSR with subject.
 #   ./generate_key.sh print <filename>                        - Print file info (CSR or private key)
 
 # Define paths
@@ -18,7 +18,7 @@ if [ -z "$1" ]; then
     echo "Error: No mode specified."
     echo "Usage:"
     echo "  ./generate_key.sh gen [filename] [bits=4096]              - Generate private key"
-    echo "  ./generate_key.sh req <private_key> \"<subject>\" - Generate CSR with subject"
+    echo "  ./generate_key.sh req <private_key> \"<subject>\" - Generate X.509 Certificate Signing Request with subject"
     echo "  ./generate_key.sh print <filename>                        - Print file info (CSR or private key)"
     echo ""
     echo "Subject format:"

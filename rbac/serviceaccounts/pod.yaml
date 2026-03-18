@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-test
+  namespace: svc-test-ns
+spec:
+  # Refer to serviceaccounts.yaml.
+  # This line is needed to bind serviceaccount to this Pod.
+  serviceAccountName: my-serviceaccount
+  containers:
+    - name: kubectl-cli
+      image: bitnami/kubectl:latest
+      command: ["sleep", "3600"]

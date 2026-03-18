@@ -1,0 +1,14 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: bind-bot-reader
+  namespace: svc-test-ns
+roleRef:
+  # Refer to role.yaml.
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: read-all-pods
+subjects:
+  - kind: ServiceAccount
+    name: my-serviceaccount
+    namespace: svc-test-ns
