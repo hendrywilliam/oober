@@ -1,0 +1,27 @@
+# NetworkPolicies are implemented by network plugin.
+# Creating NetworkPolicy resource without a controller
+# that implements it will have no effect.
+# k3s is using Flannel as Network Plugin.
+#
+# NetPol operate at layer 3/4 of OSI models (IP and Port Level)
+# NetPol used to control the traffic in (ingress) and out (egress) of a Pod.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: deny-curl-to-nginx
+  namespace: netpol-ns
+spec:
+  # Pod will apply this Network Policy
+  podSelector:
+    matchLabels:
+      run: nginx
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchExpressions:
+              - key: run
+                operator: NotIn
+                values:
+                  - curl
