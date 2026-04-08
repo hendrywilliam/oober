@@ -1,106 +1,43 @@
-# Container Registry
+# Docker Registry
 
-This folder contains Kubernetes manifests for deploying a Docker Registry v2 to store container images.
+Private Docker registry dengan HAproxy Ingress dan TLS.
 
-## Files Description
+## Komponen
 
-- `ns.yaml`: Namespace for registry resources
-- `persistent-volume.yaml`: Persistent volume claim for registry data storage (10Gi)
-- `config-map.yaml`: Configuration for the registry with storage deletion enabled
-- `deployment.yaml`: Deployment specification for the registry with resource limits
-- `service.yaml`: Service to expose the registry within the cluster (ClusterIP)
-- `ingress.yaml`: Ingress to expose the registry externally with TLS (optional)
+| File | Deskripsi |
+|------|-----------|
+| `ns.yaml` | Namespace |
+| `config-map.yaml` | Konfigurasi registry |
+| `deployment.yaml` | StatefulSet registry |
+| `service.yaml` | Service expose registry |
+| `persistent-volume.yaml` | PVC untuk storage |
+| `ingress.yaml` | Ingress dengan TLS & auth |
+| `auth.yaml` | Secret basic auth |
 
-## Prerequisites
+## Deploy
 
-- Kubernetes cluster with HAProxy Ingress Controller
-- cert-manager installed (if using TLS with Let's Encrypt)
-- StorageClass named "local-path" available (modify persistent-volume.yaml if using a different StorageClass)
-
-## Deployment Steps
-
-1. Create namespace:
-   ```bash
-   kubectl apply -f ns.yaml
-   ```
-
-2. Create persistent volume claim:
-   ```bash
-   kubectl apply -f persistent-volume.yaml
-   ```
-
-3. Create config map:
-   ```bash
-   kubectl apply -f config-map.yaml
-   ```
-
-4. Deploy registry:
-   ```bash
-   kubectl apply -f deployment.yaml
-   ```
-
-5. Create service:
-   ```bash
-   kubectl apply -f service.yaml
-   ```
-
-6. (Optional) Create ingress for external access:
-   ```bash
-   # First modify registry.yourdomain.com in ingress.yaml to your actual domain
-   kubectl apply -f ingress.yaml
-   ```
-
-## Usage
-
-### Within Cluster
-To use the registry within the cluster:
 ```bash
-docker image tag my-image:latest registry-svc.ns-registry.svc.cluster.local:5000/my-image:latest
-docker push registry-svc.ns-registry.svc.cluster.local:5000/my-image:latest
-docker pull registry-svc.ns-registry.svc.cluster.local:5000/my-image:latest
+kubectl apply -f ns.yaml
+kubectl apply -f persistent-volume.yaml
+kubectl apply -f config-map.yaml
+kubectl apply -f auth.yaml
+kubectl apply -f service.yaml
+kubectl apply -f deployment.yaml
+kubectl apply -f ingress.yaml
 ```
 
-### External Access
-If you have configured ingress, replace with your domain:
+## Auth
+
+Generate password:
 ```bash
-docker image tag my-image:latest registry.yourdomain.com/my-image:latest
-docker push registry.yourdomain.com/my-image:latest
-docker pull registry.yourdomain.com/my-image:latest
+htpasswd -nb registry <password>
 ```
 
-## Managing Images
+Update `auth.yaml` dengan output di atas.
 
-To list all repositories in the registry:
+## Akses
+
 ```bash
-curl -X GET http://registry-svc.ns-registry.svc.cluster.local:5000/v2/_catalog
+docker login registry.hendrywilliam.com
+docker push registry.hendrywilliam.com/<image>
 ```
-
-To list all tags for a specific repository:
-```bash
-curl -X GET http://registry-svc.ns-registry.svc.cluster.local:5000/v2/my-image/tags/list
-```
-
-To delete an image tag:
-```bash
-curl -X DELETE http://registry-svc.ns-registry.svc.cluster.local:5000/v2/my-image/manifests/sha256:<digest>
-```
-
-## Cleanup
-
-To remove all resources:
-```bash
-kubectl delete -f ingress.yaml  # If deployed
-kubectl delete -f service.yaml
-kubectl delete -f deployment.yaml
-kubectl delete -f config-map.yaml
-kubectl delete -f persistent-volume.yaml
-kubectl delete -f ns.yaml
-```
-
-## Notes
-
-- The registry deployment uses the official Docker Registry v2 image
-- Storage deletion is enabled to allow removing images via the API
-- Resource limits are set to prevent the registry from consuming excessive resources
-- Consider increasing the persistent volume size based on your needs
-- The registry is not configured with authentication by default - consider adding this for production use

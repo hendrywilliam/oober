@@ -1,5 +1,5 @@
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
   name: registry
   namespace: ns-registry
@@ -7,6 +7,7 @@ metadata:
     app: registry
 spec:
   replicas: 1
+  serviceName: registry-svc
   selector:
     matchLabels:
       app: registry
@@ -24,6 +25,8 @@ spec:
           env:
             - name: REGISTRY_STORAGE_DELETE_ENABLED
               value: "true"
+            - name: OTEL_TRACES_EXPORTER
+              value: "none"
           volumeMounts:
             - name: registry-data
               mountPath: /var/lib/registry
@@ -38,26 +41,15 @@ spec:
               cpu: "500m"
               memory: "1Gi"
       volumes:
-        - name: registry-data
-          persistentVolumeClaim:
-            claimName: registry-data
         - name: registry-config
           configMap:
-            name: registry-config
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: registry-svc
-  namespace: ns-registry
-  labels:
-    app: registry
-spec:
-  type: ClusterIP
-  selector:
-    app: registry
-  ports:
-    - name: registry-port
-      protocol: TCP
-      port: 5000
-      targetPort: 5000
+            name: registry-cfmap
+  volumeClaimTemplates:
+    - metadata:
+        name: registry-data
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 50Gi

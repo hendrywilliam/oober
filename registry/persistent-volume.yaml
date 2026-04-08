@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: registry-data
+  name: registry-pvc
   namespace: ns-registry
   labels:
     app: registry

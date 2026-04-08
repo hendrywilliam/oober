@@ -1,44 +1,35 @@
-# Ingress resource.
-# Ingress controller always read any state from this resource.
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: echo-ingress
-  # Different namespace will lead to unexpected behaviour.
-  namespace: haproxy-controller
-  # There are 2 ways to requests TLS certificate, using
-  # annotation on the ingress with ingress-shim or
-  # directly creating a certificate resource.
-  cert-manager.io/issuer: "letsencrypt-staging" # Or production.
-  # cert-manager.io/cluster-issuer: "letsencrypt-staging" # For cluster issuer
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+  name: main-ingress
+  namespace: ns-main
 spec:
-  # Refer to ingress-controller-class.yaml
   ingressClassName: prod
-  # Deploy TLS Ingress.
   tls:
     - hosts:
-        - domain.com
-      secretName: letsencrypt-staging
+        - hendrywilliam.com
+        - "*.hendrywilliam.com"
+      secretName: letsencrypt-prod
   rules:
-    - host: example.com
+    - host: hendrywilliam.com
       http:
         paths:
           - path: /
             pathType: Prefix
             backend:
               service:
-                name: serviceName
+                name: nginx-svc
                 port:
-                  number: 6969
-    # Create fallback to handle all HTTP(s) requests.
-    # NOTE: This pattern isnt usable with TLS certificate
-    - host:
+                  number: 80
+    - host: "*.hendrywilliam.com"
       http:
         paths:
           - path: /
             pathType: Prefix
             backend:
               service:
-                name: echo-server-service
+                name: nginx-svc
                 port:
-                  number: 8080
+                  number: 80

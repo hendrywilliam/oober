@@ -4,16 +4,19 @@ metadata:
   name: registry-ingress
   namespace: ns-registry
   annotations:
-    kubernetes.io/ingress.class: "haproxy"
-    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    cert-manager.io/cluster-issuer: letsencrypt-prod
     haproxy.org/forwarded-for: "true"
+    haproxy.org/auth-type: basic
+    haproxy.org/auth-secret: registry-auth
+    haproxy.org/auth-realm: "Registry Authentication"
 spec:
+  ingressClassName: prod
   tls:
     - hosts:
-        - registry.yourdomain.com
+        - registry.hendrywilliam.com
       secretName: registry-tls
   rules:
-    - host: registry.yourdomain.com
+    - host: registry.hendrywilliam.com
       http:
         paths:
           - path: /
