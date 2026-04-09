@@ -39,5 +39,6 @@ Update `auth.yaml` dengan output di atas.
 
 ```bash
 docker login registry.hendrywilliam.com
+docker build -t registry.hendrywilliam.com/golang-http .
 docker push registry.hendrywilliam.com/<image>
 ```
