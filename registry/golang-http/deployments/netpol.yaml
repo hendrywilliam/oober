@@ -1,0 +1,19 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: golang-http-netpol
+  namespace: ns-golang-http
+spec:
+  podSelector:
+    matchLabels:
+      app: golang-http
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: ns-main
+      ports:
+        - protocol: TCP
+          port: 8080

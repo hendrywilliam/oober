@@ -1,0 +1,15 @@
+# Install ArgoCD using official manifests
+# Run: kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+# Atau gunakan file ini sebagai referensi untuk instalasi via kustomize
+
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: argocd
+
+resources:
+  - namespace.yaml
+  - https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+  - ingress.yaml
+  - project.yaml
+  - application.yaml
