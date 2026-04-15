@@ -4,8 +4,9 @@ metadata:
   name: registry-auth
   namespace: ns-registry
 type: Opaque
-stringData:
-  # Install apache2-utils
-  # Check installation: which htpasswd
-  # New password command: htpasswd -nb registry <newPass>
-  auth: "registry:<insertYourPass>"
+data:
+  # Format HAProxy Basic Auth
+  # name: encrypted or base64 encoded string.
+  # crypt(3) support multiple encryption algorithm.
+  # openssl passwd -5 <yourSecret> | base64 -w 0 (w for disable text wrapping)
+  hantu: JDUkVU4xSFBPT1RaS2NCUmRpaCQvc2ppSzIvNE13WkxST3NqN2xFdFhXYmVxVXZ0b0V5WHBmcEZtQmNTb0pCCg==

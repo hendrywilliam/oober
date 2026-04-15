@@ -1,3 +1,6 @@
+# There are multiple ways to implement HAProxy configuration:
+# Global:
+
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -5,9 +8,13 @@ metadata:
   namespace: ns-registry
   annotations:
     cert-manager.io/cluster-issuer: letsencrypt-prod
+    # Get client Real IP address.
     haproxy.org/forwarded-for: "true"
-    haproxy.org/auth-type: basic
-    haproxy.org/auth-secret: registry-auth
+    # https://www.haproxy.com/documentation/kubernetes-ingress/enterprise/configuration-reference/ingress/#auth-secret
+    haproxy.org/auth-type: basic-auth
+    # Pattern: namespace/secretName. Refer to auth.yaml
+    haproxy.org/auth-secret: ns-registry/registry-auth
+    # Basic Auth label.
     haproxy.org/auth-realm: "Registry Authentication"
 spec:
   ingressClassName: prod
