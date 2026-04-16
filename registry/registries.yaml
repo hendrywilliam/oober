@@ -1,0 +1,19 @@
+# Private Registry Configuration
+# Please ensure you also create this file on each server as well :)
+# File location: /etc/rancher/k3s/registries.yaml
+
+mirrors:
+  hantu:
+    endpoint:
+      - https://registry.hendrywilliam.com
+configs:
+  hantu:
+    auth:
+      username: <BASIC AUTH USERNAME>
+      password: <BASIC AUTH PASSWORD>
+      token: <BEARER TOKEN>
+    tls:
+      ca_file: <PATH_TO_SERVER_CA>
+      cert_file: <PATH_TO_CLIENT_CERT>
+      key_file: <PATH_TO_CLIENT_KEY>
+      insecure_skip_verify: <SKIP TLS CERT VERIFICATION BOOLEAN>

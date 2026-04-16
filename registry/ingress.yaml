@@ -1,5 +1,6 @@
 # There are multiple ways to implement HAProxy configuration:
-# Global:
+# Global: ConfigMap
+# Ingress Resource: Ingress Annotations.
 
 apiVersion: networking.k8s.io/v1
 kind: Ingress
